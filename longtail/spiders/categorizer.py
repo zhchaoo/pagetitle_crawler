@@ -81,12 +81,13 @@ class CategorizerSpider(scrapy.Spider):
                 self.start_urls.append("http://" + line[1])
                 # self.start_urls.append(line[0])
 
-    def _parse_category(self, text):
+    @staticmethod
+    def _parse_category(text):
         category_map = {}
         category = ""
-        for cat, map in KEY_MAPS.items():
+        for cat, maps in KEY_MAPS.items():
             score = 0
-            for key, priority in map.items():
+            for key, priority in maps.items():
                 score += text.count(key) * priority
             category_map[cat] = score
 
