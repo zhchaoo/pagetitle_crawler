@@ -5,63 +5,7 @@ import csv
 
 from urlparse import urlparse
 from longtail.items import TailItem
-
-# key : priority
-KEY_MAPS = {
-    "色情": {
-        "激情": 2,
-        "福利": 2,
-        "A片": 2,
-        "黄色": 2,
-        "草榴": 2,
-        "三级": 1,
-        "av": 1,
-        "AV": 1,
-        "伦理": 1,
-        "撸": 1,
-        "淫": 1,
-        "啪啪啪": 1,
-        "18禁止": 1,
-        "Sex": 1,
-        "sex": 1,
-        "色": 1,
-        "成人": 1,
-        "人体": 1,
-    },
-    "博彩": {
-        "博彩": 4,
-        "彩票": 4,
-        "六合彩": 3,
-        "开奖": 2,
-        "双色球": 2,
-        "中彩": 1,
-        "彩": 1,
-    },
-    "小说": {
-        "小说": 3,
-        "书": 1,
-        "阅读": 1,
-        "文学": 2,
-        "章节": 2,
-    },
-    "下载": {
-        "下载": 1,
-        "软件": 1,
-    },
-    "直播": {
-        "直播": 1,
-    },
-    "购物": {
-        "特卖": 2,
-        "热卖": 2,
-        "正品": 1,
-        "货到": 1,
-        "淘": 1,
-    },
-    "漫画": {
-        "漫画": 3,
-    }
-}
+from longtail.keymaps import KeyMaps
 
 
 class CategorizerSpider(scrapy.Spider):
@@ -85,7 +29,7 @@ class CategorizerSpider(scrapy.Spider):
     def _parse_category(text):
         category_map = {}
         category = ""
-        for cat, maps in KEY_MAPS.items():
+        for cat, maps in KeyMaps.items():
             score = 0
             for key, priority in maps.items():
                 score += text.count(key) * priority
