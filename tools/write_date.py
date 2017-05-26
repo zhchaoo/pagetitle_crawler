@@ -1,7 +1,71 @@
 import csv
 import optparse
+import os
 import logging
 import codecs
+
+
+def walk_dir(directory, function, exclude):
+    maps = {}
+    exclude_list = []
+    if exclude:
+        exclude_list = exclude.split(',')
+    files = os.listdir(directory)
+    files.sort()
+    if not directory.endswith(os.sep):
+        directory = directory + os.sep
+    for item in files:
+        full_path = directory + item
+        if os.path.isdir(full_path):
+            if item not in exclude_list:
+                walk_dir(full_path, function, exclude)
+        else:
+            filename = directory + item
+            if function:
+                maps.update(function(filename))
+    return maps
+
+
+def read_maps(filename):
+    maps = {}
+    index = {}
+    category_reader = csv.reader(file(filename, 'rb'))
+    for line in category_reader:
+        if not index:
+            for i in range(len(line)):
+                index[line[i]] = i
+        else:
+            # key:domain; value:category,score,title
+            maps[line[index["domain"]]] = [line[index["category"]],
+                                           line[index["score"]],
+                                           line[index["title"]]]
+    return maps
+
+
+def main(options, args):
+    if os.path.isdir(args[0]):
+        category_maps = walk_dir(args[0], read_maps, "")
+    else:
+        category_maps = read_maps(args[0])
+
+    logging.info("Read category result success!")
+
+    data_file = open(args[1], "rb")
+    date_reader = csv.reader(data_file)
+    date_writer = csv.writer(file(args[1].replace('.csv', '-cate.csv'), 'wb'))
+
+    pv_main_index = {}
+    for line in date_reader:
+        if not pv_main_index:
+            line += ['category', 'score', 'title']
+            for i in range(len(line)):
+                pv_main_index[line[i]] = i
+        elif category_maps.has_key(line[pv_main_index["url"]]):
+            line += category_maps[line[pv_main_index["url"]]]
+        date_writer.writerow(line)
+
+    logging.info("Done!")
+
 
 if __name__ == "__main__":
     option_parser = optparse.OptionParser(usage="Usage: %prog [options] resource-path")
@@ -14,31 +78,4 @@ if __name__ == "__main__":
         logging.fatal("Usage: write_date.py category.csv data.csv")
         exit(-1)
 
-    category_maps = {}
-    category_index = {}
-    category_reader = csv.reader(file(args[0], 'rb'))
-    for line in category_reader:
-        if not category_index:
-            for i in range(len(line)):
-                category_index[line[i]] = i
-        else:
-            # key:domain; value:category,score,title
-            category_maps[line[category_index["domain"]]] = [line[category_index["category"]],
-                                                             line[category_index["score"]],
-                                                             line[category_index["title"]]]
-    logging.info("Read category result success!")
-
-    data_file = codecs.open(args[1], "rb", "utf-16")
-    date_reader = csv.reader(data_file)
-    date_writer = csv.writer(file(args[1].replace('.csv', '-cate.csv'), 'wb'))
-
-    head = True
-    for line in date_reader:
-        if head:
-            line += ['category', 'score', 'title']
-            head = False
-        elif category_maps.has_key(line[1]):
-            line += category_maps[line[1]]
-        date_writer.writerow(line)
-
-    logging.info("Done!")
+    main(options, args)

@@ -14,7 +14,8 @@ class CategorizerSpider(scrapy.Spider):
 
     def __init__(self, max_pages=None, database_dir='./data', *args, **kwargs):
         super(CategorizerSpider, self).__init__(*args, **kwargs)
-        url_file = codecs.open(kwargs['file'], "rb", "utf-16")
+        # url_file = codecs.open(kwargs['file'], "rb", "utf-16")
+        url_file = open(kwargs['file'], "rb")
         url_reader = csv.reader(url_file)
         head_line = True
         for line in url_reader:
@@ -22,7 +23,7 @@ class CategorizerSpider(scrapy.Spider):
                 head_line = False
                 continue
             else:
-                self.start_urls.append("http://" + line[1])
+                self.start_urls.append("http://" + line[2])
                 # self.start_urls.append(line[0])
 
     @staticmethod
