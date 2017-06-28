@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import codecs
+import logging
 import csv
 
 from urlparse import urlparse
@@ -17,13 +17,20 @@ class CategorizerSpider(scrapy.Spider):
         # url_file = codecs.open(kwargs['file'], "rb", "utf-16")
         url_file = open(kwargs['file'], "rb")
         url_reader = csv.reader(url_file)
+        url_index = -1
         head_line = True
         for line in url_reader:
             if head_line:
+                for i in range(len(line)):
+                    if "url" in line[i]:
+                        url_index = i
                 head_line = False
                 continue
             else:
-                self.start_urls.append("http://" + line[2])
+                if url_index < 0:
+                    logging.error("no url founded in file")
+                    exit()
+                self.start_urls.append("http://" + line[url_index])
                 # self.start_urls.append(line[0])
 
     @staticmethod

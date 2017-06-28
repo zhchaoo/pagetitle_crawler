@@ -1,8 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import csv
 import optparse
 import os
 import logging
 import codecs
+
+TYPE = ""
 
 
 def walk_dir(directory, function, exclude):
@@ -35,17 +39,28 @@ def read_maps(filename):
             for i in range(len(line)):
                 index[line[i]] = i
         else:
-            # key:domain; value:category,score,title
-            maps[line[index["domain"]]] = [line[index["category"]],
-                                           line[index["score"]],
-                                           line[index["title"]]]
+            if TYPE == "ZC":
+                # key:domain; value:category,score,title
+                maps[line[index["domain"]]] = [line[index["category"]],
+                                               # line[index["score"]],
+                                               line[index["title"]]]
+            elif TYPE == "MID":
+                maps[line[index["url"]]] = [line[index["业务标签"]],
+                                               line[index["固定标签"]]]
     return maps
 
 
 def main(options, args):
+    global TYPE
     if os.path.isdir(args[0]):
+        TYPE = "MID"
+        head = ['业务标签', '固定标签']
+        empty = ['', '']
         category_maps = walk_dir(args[0], read_maps, "")
     else:
+        TYPE = "ZC"
+        head = ['category', 'title']
+        empty = ['', '']
         category_maps = read_maps(args[0])
 
     logging.info("Read category result success!")
@@ -57,11 +72,13 @@ def main(options, args):
     pv_main_index = {}
     for line in date_reader:
         if not pv_main_index:
-            line += ['category', 'score', 'title']
+            line += head
             for i in range(len(line)):
                 pv_main_index[line[i]] = i
         elif category_maps.has_key(line[pv_main_index["url"]]):
             line += category_maps[line[pv_main_index["url"]]]
+        else:
+            line += empty
         date_writer.writerow(line)
 
     logging.info("Done!")
